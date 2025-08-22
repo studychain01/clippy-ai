@@ -29,26 +29,55 @@ function createMainWindow(): void {
     resizable: true,
     alwaysOnTop: true,           // Float above other windows
     frame: true,                 // Keep window frame for now
+    center: true,                // Start in center of screen
     webPreferences: {
       nodeIntegration: false,    // Security: disable node in renderer
       contextIsolation: true,    // Security: isolate contexts
-      preload: path.join(__dirname, '../preload/preload.js'), // Load preload script
+      preload: path.join(__dirname, 'preload.js'), // Load preload script
       webSecurity: !isDev,       // Allow localhost in dev
     },
   });
 
   // Load the React app
   if (isDev) {
-    // Development: load from Vite dev server
-    console.log('Loading development server...');
-    mainWindow?.loadURL('http://localhost:5175')
-      .then(() => {
-        console.log('Development server loaded successfully');
-        mainWindow?.webContents.openDevTools(); // Open DevTools in development
-      })
-      .catch((err: any) => {
-        console.error('Failed to load development server:', err);
-      });
+    // Development: load from Vite dev server with delay
+    console.log('Waiting for Vite dev server...');
+    setTimeout(() => {
+      console.log('Loading development server from http://localhost:5176...');
+      mainWindow?.loadURL('http://localhost:5176')
+        .then(() => {
+          console.log('Development server loaded successfully');
+          mainWindow?.webContents.openDevTools(); // Open DevTools in development
+        })
+        .catch((err: any) => {
+          console.error('Failed to load development server:', err);
+          console.log('Trying alternative ports...');
+          
+          // Try other common Vite ports
+          const tryPorts = [5173, 5174, 5175, 5176, 5177];
+          let portIndex = 0;
+          
+          const tryNextPort = () => {
+            if (portIndex < tryPorts.length) {
+              const port = tryPorts[portIndex];
+              console.log(`Trying port ${port}...`);
+              mainWindow?.loadURL(`http://localhost:${port}`)
+                .then(() => {
+                  console.log(`Successfully connected to port ${port}`);
+                  mainWindow?.webContents.openDevTools();
+                })
+                .catch(() => {
+                  portIndex++;
+                  tryNextPort();
+                });
+            } else {
+              console.error('Could not connect to any Vite server port');
+            }
+          };
+          
+          tryNextPort();
+        });
+    }, 2000); // Wait 2 seconds for Vite to be ready
   } else {
     // Production: load from built files
     mainWindow?.loadFile(path.join(__dirname, '../../index.html'));
@@ -116,7 +145,20 @@ function registerIpcHandlers(): void {
   ipcMain.handle('window.minimize', async (_event: any) => {
     try {
       if (mainWindow) {
-        mainWindow.setSize(180, 60);  // Compact widget size
+        // Get screen dimensions
+        const { screen } = require('electron');
+        const primaryDisplay = screen.getPrimaryDisplay();
+        const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+        
+        // Resize to compact widget
+        mainWindow.setSize(180, 60, true); // animate the resize
+        
+        // Position in top-right corner with some padding
+        const rightX = screenWidth - 180 - 20; // 20px from right edge
+        const topY = 20; // 20px from top edge
+        mainWindow.setPosition(rightX, topY);
+        
+        console.log('Window minimized to top-right corner');
         return { success: true };
       }
       return { success: false, error: 'No main window' };
@@ -128,7 +170,20 @@ function registerIpcHandlers(): void {
   ipcMain.handle('window.expand', async (_event: any) => {
     try {
       if (mainWindow) {
-        mainWindow.setSize(420, 560);  // Full chat size
+        // Get screen dimensions
+        const { screen } = require('electron');
+        const primaryDisplay = screen.getPrimaryDisplay();
+        const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+        
+        // Resize to full chat window
+        mainWindow.setSize(420, 560, true); // animate the resize
+        
+        // Position in center of screen
+        const centerX = Math.round((screenWidth - 420) / 2);
+        const centerY = Math.round((screenHeight - 560) / 2);
+        mainWindow.setPosition(centerX, centerY);
+        
+        console.log('Window expanded to center of screen');
         return { success: true };
       }
       return { success: false, error: 'No main window' };

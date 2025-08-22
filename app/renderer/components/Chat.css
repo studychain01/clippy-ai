@@ -323,8 +323,8 @@
 
 /* ===== COMPACT WIDGET STYLES ===== */
 .chat-widget-compact {
-  width: 180px;                /* Compact width */
-  height: 60px;                /* Compact height */
+  width: 100vw;                /* Fill entire window width */
+  height: 100vh;               /* Fill entire window height */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Gradient background */
   border-radius: 30px;         /* Fully rounded */
   display: flex;               /* Flexbox layout */
@@ -336,7 +336,11 @@
   color: white;                /* White text */
   font-weight: 600;            /* Bold text */
   user-select: none;           /* Prevent text selection */
-  position: relative;          /* For icon positioning */
+  position: fixed;             /* Fixed positioning */
+  top: 0;                      /* Anchor to top */
+  left: 0;                     /* Anchor to left */
+  margin: 0;                   /* Remove margins */
+  box-sizing: border-box;      /* Include border in size */
 }
 
 .chat-widget-compact:hover {
