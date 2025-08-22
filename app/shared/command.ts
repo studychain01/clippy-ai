@@ -147,12 +147,29 @@ export class CommandProcessor {
     }
 
     try {
-      // In browser environment, open in new tab
-      window.open(url, '_blank');
-      return {
-        isCommand: true,
-        response: `✅ Opened: ${url}`
-      };
+      // Try Electron API first (if available)
+      if ((window as any).electronAPI?.openExternal) {
+        const result = await (window as any).electronAPI.openExternal(url);
+        if (result.success) {
+          return {
+            isCommand: true,
+            response: `🌐 **Opened in browser:** ${url}`
+          };
+        } else {
+          return {
+            isCommand: true,
+            error: `❌ Failed to open URL: ${result.error}`
+          };
+        }
+      }
+      // Fallback to browser window.open
+      else {
+        window.open(url, '_blank');
+        return {
+          isCommand: true,
+          response: `✅ Opened: ${url}`
+        };
+      }
     } catch (error: any) {
       return {
         isCommand: true,
@@ -204,29 +221,45 @@ export class CommandProcessor {
    */
   private async summarizeClipboard(): Promise<CommandResult> {
     try {
-      // Try to read clipboard using modern API
-      if (navigator.clipboard && navigator.clipboard.readText) {
-        const clipboardText = await navigator.clipboard.readText();
-        
-        if (!clipboardText || clipboardText.trim().length === 0) {
+      let clipboardText: string = '';
+      
+      // Try Electron API first (if available)
+      if ((window as any).electronAPI?.readClipboard) {
+        const result = await (window as any).electronAPI.readClipboard();
+        if (result.success) {
+          clipboardText = result.text || '';
+        } else {
           return {
             isCommand: true,
-            error: "Clipboard is empty or contains no text"
+            error: `❌ Failed to access clipboard: ${result.error}`
           };
         }
-
-        return {
-          isCommand: true,
-          response: `📋 **Summarizing clipboard content...**`,
-          shouldContinueToLLM: true,
-          clipboardContent: clipboardText
-        };
+      }
+      // Fallback to browser clipboard API
+      else if (navigator.clipboard && navigator.clipboard.readText) {
+        clipboardText = await navigator.clipboard.readText();
       } else {
         return {
           isCommand: true,
           error: "Clipboard access not available. Try copying text and asking me to summarize it directly."
         };
       }
+
+      // Check if clipboard content is empty (for both Electron and browser)
+      if (!clipboardText || clipboardText.trim().length === 0) {
+        return {
+          isCommand: true,
+          error: "Clipboard is empty or contains no text"
+        };
+      }
+
+      // Return clipboard content for summarization
+      return {
+        isCommand: true,
+        response: `📋 **Summarizing clipboard content...**`,
+        shouldContinueToLLM: true,
+        clipboardContent: clipboardText
+      };
     } catch (error: any) {
       return {
         isCommand: true,

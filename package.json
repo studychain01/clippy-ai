@@ -6,7 +6,7 @@
     "start": "electron .",
     "dev": "concurrently \"npm run dev:react\" \"npm run dev:electron\"",
     "dev:react": "vite",
-    "dev:electron": "ts-node app/main/main.ts"
+    "dev:electron": "NODE_ENV=development tsc app/main/main.ts --outDir dist --skipLibCheck && electron dist/main.js"
   },
   "dependencies": {
     "openai": "^5.15.0",
@@ -15,6 +15,8 @@
     "react-markdown": "^10.1.0"
   },
   "devDependencies": {
+    "@types/electron": "^1.4.38",
+    "@types/node": "^24.3.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.0.0",

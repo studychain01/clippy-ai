@@ -72,8 +72,22 @@ export default function Chat() {
     setInputText(e.target.value);
   }
 
-  function toggleMinimized() {
-    setIsMinimized(!isMinimized);
+  async function toggleMinimized() {
+    const newMinimizedState = !isMinimized;
+    setIsMinimized(newMinimizedState);
+
+    // If running in Electron, also resize the actual window
+    if ((window as any).electronAPI) {
+      try {
+        if (newMinimizedState) {
+          await (window as any).electronAPI.minimizeWindow();
+        } else {
+          await (window as any).electronAPI.expandWindow();
+        }
+      } catch (error) {
+        console.error('Failed to resize Electron window:', error);
+      }
+    }
   }
 
   async function handleSubmit() {
