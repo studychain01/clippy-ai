@@ -1,0 +1,236 @@
+/* 
+   MAIN CHAT CONTAINER
+   This is the outermost container that holds the entire chat interface
+*/
+.chat-window {
+  display: flex;           /* Use flexbox layout */
+  flex-direction: column;  /* Stack children vertically (header, messages, input) */
+  height: 100vh;          /* Take full viewport height */
+  max-height: 560px;      /* But don't exceed 560px (matches Electron window) */
+  width: 100%;            /* Take full width available */
+  background: #fff;       /* White background */
+  border-radius: 8px;     /* Rounded corners */
+  overflow: hidden;       /* Hide anything that goes outside the container */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+/* 
+   CHAT HEADER SECTION
+   Contains the title, style selector, and clear button
+*/
+.chat-header {
+  display: flex;              /* Use flexbox for horizontal layout */
+  align-items: center;        /* Center items vertically */
+  justify-content: space-between; /* Spread items across the width */
+  padding: 12px 16px;         /* Add padding inside (top/bottom: 12px, left/right: 16px) */
+  background: #f8f9fa;        /* Light gray background */
+  border-bottom: 1px solid #e9ecef; /* Thin border at bottom to separate from messages */
+  gap: 12px;                  /* Add 12px space between child elements */
+}
+
+/* HEADER TITLE */
+.chat-header h2 {
+  margin: 0;           /* Remove default margin */
+  font-size: 18px;     /* Set font size */
+  font-weight: 600;    /* Make it semi-bold */
+  color: #2676c6;      /* Dark gray color */
+}
+
+/* STYLE SELECTOR DROPDOWN */
+.chat-header select {
+  padding: 4px 8px;               /* Inner spacing */
+  border: 1px solid #ad4e6f;      /* Gray border */
+  border-radius: 4px;             /* Slightly rounded corners */
+  font-size: 14px;                /* Text size */
+}
+
+/* CLEAR BUTTON */
+.chat-header button {
+  padding: 6px 12px;              /* Inner spacing */
+  background: #35dc67;            /* Red background (Bootstrap danger color) */
+  color: rgb(36, 189, 77);                   /* White text */
+  border: none;                   /* Remove default border */
+  border-radius: 4px;             /* Rounded corners */
+  cursor: pointer;                /* Show pointer cursor on hover */
+  font-size: 14px;                /* Text size */
+}
+
+/* CLEAR BUTTON ON HOVER - makes it darker when you hover over it */
+.chat-header button:hover {
+  background: #3923c8;            /* Darker red on hover */
+}
+
+/* 
+   MESSAGES CONTAINER
+   This is where all the chat messages are displayed
+*/
+.chat-messages {
+  flex: 1;                    /* Take up all remaining space between header and input */
+  overflow-y: auto;           /* Allow scrolling when messages overflow */
+  padding: 16px;              /* Add padding around messages */
+  display: flex;              /* Use flexbox */
+  flex-direction: column;     /* Stack messages vertically */
+  gap: 12px;                  /* Add 12px space between each message */
+}
+
+/* 
+   INDIVIDUAL MESSAGE BUBBLE
+   Base styling for all message types
+*/
+.message {
+  padding: 10px 12px;         /* Inner spacing */
+  border-radius: 12px;        /* Rounded corners for bubble effect */
+  max-width: 85%;             /* Don't take more than 85% of container width */
+  word-wrap: break-word;      /* Break long words to fit in bubble */
+  line-height: 1.4;           /* Space between lines of text */
+}
+
+/* 
+   USER MESSAGES (messages you send)
+   Blue bubbles aligned to the right
+*/
+.message.user {
+  background: #007bff;        /* Blue background (Bootstrap primary color) */
+  color: white;               /* White text */
+  align-self: flex-end;       /* Push to right side */
+  margin-left: auto;          /* Push to right (alternative method) */
+}
+
+/* 
+   AI ASSISTANT MESSAGES (responses from ChatGPT)
+   Gray bubbles aligned to the left
+*/
+.message.assistant {
+  background: #f1f3f4;        /* Light gray background */
+  color: #333;                /* Dark gray text */
+  align-self: flex-start;     /* Keep on left side */
+  border: 1px solid #e9ecef;  /* Subtle border */
+}
+
+/* 
+   SYSTEM MESSAGES (rare, for system notifications)
+   Yellow bubbles centered
+*/
+.message.system {
+  background: #ffeaa7;        /* Light yellow background */
+  color: #2d3436;             /* Dark text */
+  align-self: center;         /* Center in container */
+  font-style: italic;         /* Make text italic */
+}
+
+/* 
+   MESSAGE LABELS (shows "user:", "assistant:", etc.)
+   Small text above message content
+*/
+.message strong {
+  display: block;             /* Put on its own line */
+  font-size: 12px;            /* Smaller text */
+  opacity: 0.8;               /* Make it slightly transparent */
+  margin-bottom: 4px;         /* Add space below label */
+}
+
+/* 
+   ERROR MESSAGES
+   Red-themed messages for when something goes wrong
+*/
+.error {
+  background: #f8d7da;        /* Light red background */
+  color: #721c24;             /* Dark red text */
+  padding: 8px 12px;          /* Inner spacing */
+  border-radius: 6px;         /* Rounded corners */
+  border: 1px solid #f5c6cb;  /* Red border */
+  font-size: 14px;            /* Text size */
+}
+
+/* 
+   INPUT AREA
+   Bottom section with text input and send button
+*/
+.chat-input {
+  display: flex;              /* Horizontal layout */
+  gap: 8px;                   /* Space between input and button */
+  padding: 16px;              /* Inner spacing */
+  background: #f8f9fa;        /* Light gray background (matches header) */
+  border-top: 1px solid #e9ecef; /* Border to separate from messages */
+}
+
+/* 
+   TEXT INPUT FIELD
+   Where users type their messages
+*/
+.chat-input input {
+  flex: 1;                    /* Take up most of the space */
+  padding: 10px 12px;         /* Inner spacing */
+  border: 1px solid #ced4da;  /* Gray border */
+  border-radius: 20px;        /* Very rounded corners (pill shape) */
+  font-size: 14px;            /* Text size */
+  outline: none;              /* Remove default focus outline */
+}
+
+/* 
+   INPUT FIELD WHEN FOCUSED (clicked/selected)
+   Blue border and glow effect
+*/
+.chat-input input:focus {
+  border-color: #007bff;      /* Blue border */
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25); /* Blue glow effect */
+}
+
+/* 
+   SEND BUTTON
+   Button to submit messages
+*/
+.chat-input button {
+  padding: 10px 20px;         /* Inner spacing */
+  background: #007bff;        /* Blue background */
+  color: white;               /* White text */
+  border: none;               /* Remove default border */
+  border-radius: 20px;        /* Rounded corners (pill shape) */
+  cursor: pointer;            /* Show pointer cursor */
+  font-size: 14px;            /* Text size */
+  font-weight: 500;           /* Medium font weight */
+}
+
+/* 
+   SEND BUTTON ON HOVER (when not disabled)
+   Darker blue when hovering
+*/
+.chat-input button:hover:not(:disabled) {
+  background: #0056b3;        /* Darker blue */
+}
+
+/* 
+   SEND BUTTON WHEN DISABLED
+   Gray appearance when button can't be clicked
+*/
+.chat-input button:disabled {
+  background: #6c757d;        /* Gray background */
+  cursor: not-allowed;        /* Show "not allowed" cursor */
+}
+
+/* 
+   CUSTOM SCROLLBAR STYLING
+   Makes the scrollbar look nicer (only works in Chrome/Safari/Edge)
+*/
+
+/* The scrollbar itself */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;                 /* Make scrollbar thin */
+}
+
+/* The track (background) of the scrollbar */
+.chat-messages::-webkit-scrollbar-track {
+  background: #f1f1f1;        /* Light gray background */
+  border-radius: 3px;         /* Rounded corners */
+}
+
+/* The draggable part of the scrollbar */
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #c1c1c1;        /* Gray color */
+  border-radius: 3px;         /* Rounded corners */
+}
+
+/* The scrollbar when you hover over it */
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;        /* Darker gray on hover */
+}

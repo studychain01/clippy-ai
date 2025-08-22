@@ -1,5 +1,7 @@
 // Chat.tsx
 import { useState, useEffect, useRef } from "react";
+import { chat, LLMMessage } from "../../shared/llm";
+import "./Chat.css";
 
 type ChatMessage = {
   id: string;
@@ -54,17 +56,59 @@ export default function Chat() {
     setInputText(e.target.value);
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {ƒ
     if (!inputText.trim() || loading) return;
-    const newMsg: ChatMessage = {
+    
+    const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
       content: inputText,
       ts: Date.now(),
     };
-    setMessages((prev) => [...prev, newMsg]);
+    
+    setMessages((prev) => [...prev, userMessage]);
     setInputText("");
-    // placeholder: later you’ll call runCommandOrChat(inputText)
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Convert chat messages to LLM format
+      const llmMessages: LLMMessage[] = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+      
+      // Add the new user message
+      llmMessages.push({
+        role: "user",
+        content: userMessage.content
+      });
+
+      // Create system prompt based on style
+      const systemPrompt = promptStyle === "Brief" 
+        ? "You are a helpful assistant. Keep your responses concise and to the point."
+        : "You are a helpful assistant. Provide thoughtful and detailed responses.";
+
+      // Get AI response
+      const aiResponse = await chat(systemPrompt, llmMessages, {
+        temperature: 0.7,
+        maxTokens: 1000
+      });
+
+      // Add AI response to messages
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: aiResponse,
+        ts: Date.now(),
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong with the AI response.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   // --- UI ---
