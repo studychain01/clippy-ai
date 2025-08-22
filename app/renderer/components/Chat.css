@@ -130,6 +130,62 @@
 }
 
 /* 
+   MESSAGE CONTENT AREA
+   Container for the actual message text/markdown
+*/
+.message-content {
+  line-height: 1.5;           /* Better line spacing for readability */
+}
+
+/* 
+   MARKDOWN FORMATTING IN MESSAGES
+   Styles for rendered markdown content
+*/
+.message-content h1,
+.message-content h2,
+.message-content h3 {
+  margin: 8px 0 4px 0;        /* Compact heading spacing */
+  font-size: inherit;         /* Don't make headings too big */
+  font-weight: bold;
+}
+
+.message-content p {
+  margin: 0 0 8px 0;          /* Space between paragraphs */
+}
+
+.message-content code {
+  background: rgba(0, 0, 0, 0.1); /* Light background for inline code */
+  padding: 2px 4px;           /* Small padding */
+  border-radius: 3px;         /* Rounded corners */
+  font-family: 'Monaco', 'Consolas', monospace; /* Monospace font */
+}
+
+.message-content pre {
+  background: rgba(0, 0, 0, 0.05); /* Darker background for code blocks */
+  padding: 8px;               /* More padding for code blocks */
+  border-radius: 6px;         /* Rounded corners */
+  overflow-x: auto;           /* Allow horizontal scrolling */
+  margin: 8px 0;              /* Space around code blocks */
+}
+
+.message-content ul,
+.message-content ol {
+  margin: 4px 0 8px 16px;     /* Indent and space lists */
+  padding: 0;
+}
+
+.message-content li {
+  margin: 2px 0;              /* Small space between list items */
+}
+
+.message-content blockquote {
+  border-left: 3px solid #ddd; /* Left border for quotes */
+  margin: 8px 0;              /* Space around quotes */
+  padding-left: 12px;         /* Indent quote content */
+  opacity: 0.8;               /* Make quotes slightly faded */
+}
+
+/* 
    ERROR MESSAGES
    Red-themed messages for when something goes wrong
 */

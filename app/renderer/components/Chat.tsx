@@ -1,6 +1,8 @@
 // Chat.tsx
 import { useState, useEffect, useRef } from "react";
-import { chat, LLMMessage } from "../../shared/llm";
+import { LLMMessage } from "../../shared/llm";
+import { CommandProcessor } from "../../shared/command";
+import ReactMarkdown from 'react-markdown';
 import "./Chat.css";
 
 type ChatMessage = {
@@ -16,7 +18,7 @@ export default function Chat() {
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [promptStyle, setPromptStyle] = useState<"Balanced" | "Brief">(
+  const [promptStyle, setPromptStyle] = useState<"Balanced" | "Brief" | "Creative" | "Professional">(
     "Balanced"
   );
   const [copiedNotice, setCopiedNotice] = useState(false);
@@ -27,6 +29,9 @@ export default function Chat() {
   // Refs
   const listEndRef = useRef<HTMLDivElement | null>(null);
 
+  // Command processor
+  const [commandProcessor] = useState(() => new CommandProcessor());
+
   // --- Effects ---
   useEffect(() => {
     // Load from localStorage on mount
@@ -34,7 +39,7 @@ export default function Chat() {
     if (saved) setMessages(JSON.parse(saved));
 
     const savedStyle = localStorage.getItem("clippy.promptStyle.v1");
-    if (savedStyle === "Balanced" || savedStyle === "Brief") {
+    if (savedStyle === "Balanced" || savedStyle === "Brief" || savedStyle === "Creative" || savedStyle === "Professional") {
       setPromptStyle(savedStyle);
     }
   }, []);
@@ -56,8 +61,12 @@ export default function Chat() {
     setInputText(e.target.value);
   }
 
-  async function handleSubmit() {ƒ
-    if (!inputText.trim() || loading) return;
+  async function handleSubmit() {
+    console.log('handleSubmit called with inputText:', inputText);
+    if (!inputText.trim() || loading) {
+      console.log('Returning early - inputText empty or loading');
+      return;
+    }
     
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -72,27 +81,32 @@ export default function Chat() {
     setError(null);
 
     try {
-      // Convert chat messages to LLM format
+      // Convert chat messages to LLM format for context
       const llmMessages: LLMMessage[] = messages.map(msg => ({
         role: msg.role,
         content: msg.content
       }));
-      
-      // Add the new user message
-      llmMessages.push({
-        role: "user",
-        content: userMessage.content
-      });
 
       // Create system prompt based on style
-      const systemPrompt = promptStyle === "Brief" 
-        ? "You are a helpful assistant. Keep your responses concise and to the point."
-        : "You are a helpful assistant. Provide thoughtful and detailed responses.";
+      let systemPrompt = "You are Clippy AI, a helpful desktop assistant.";
+      switch (promptStyle) {
+        case "Brief":
+          systemPrompt += " Keep responses concise and to the point. Use markdown formatting when helpful.";
+          break;
+        case "Creative":
+          systemPrompt += " Be creative, engaging, and use emojis. Make responses fun and interesting. Use markdown formatting when helpful.";
+          break;
+        case "Professional":
+          systemPrompt += " Maintain a professional, formal tone. Provide comprehensive, well-structured responses. Use markdown formatting when helpful.";
+          break;
+        default: // Balanced
+          systemPrompt += " Provide thoughtful and detailed responses. Use markdown formatting when helpful.";
+      }
 
-      // Get AI response
-      const aiResponse = await chat(systemPrompt, llmMessages, {
-        temperature: 0.7,
-        maxTokens: 1000
+      // Use command processor to handle input (commands or chat)
+      const aiResponse = await commandProcessor.runCommandOrChat(inputText, {
+        system: systemPrompt,
+        history: llmMessages
       });
 
       // Add AI response to messages
@@ -120,13 +134,37 @@ export default function Chat() {
         <select
           value={promptStyle}
           onChange={(e) =>
-            setPromptStyle(e.target.value as "Balanced" | "Brief")
+            setPromptStyle(e.target.value as "Balanced" | "Brief" | "Creative" | "Professional")
           }
         >
           <option value="Balanced">Balanced</option>
           <option value="Brief">Brief</option>
+          <option value="Creative">Creative</option>
+          <option value="Professional">Professional</option>
         </select>
         <button onClick={() => setMessages([])}>Clear</button>
+        <button onClick={async () => {
+          const helpMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: "user",
+            content: "/help",
+            ts: Date.now(),
+          };
+          setMessages(prev => [...prev, helpMessage]);
+          
+          const helpResponse = await commandProcessor.runCommandOrChat("/help", {
+            system: "You are Clippy AI, a helpful desktop assistant.",
+            history: []
+          });
+          
+          const assistantMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: helpResponse,
+            ts: Date.now(),
+          };
+          setMessages(prev => [...prev, assistantMessage]);
+        }}>Help</button>
       </div>
 
       {/* Messages */}
@@ -136,7 +174,14 @@ export default function Chat() {
             key={m.id}
             className={`message ${m.role}`}
           >
-            <strong>{m.role}:</strong> {m.content}
+            <strong>{m.role}:</strong> 
+            <div className="message-content">
+              {m.role === "assistant" ? (
+                <ReactMarkdown>{m.content}</ReactMarkdown>
+              ) : (
+                m.content
+              )}
+            </div>
           </div>
         ))}
         {loading && <div className="message assistant">…thinking…</div>}
@@ -152,7 +197,13 @@ export default function Chat() {
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           placeholder="Type your message…"
         />
-        <button onClick={handleSubmit} disabled={loading}>
+        <button 
+          onClick={() => {
+            console.log('Send button clicked!');
+            handleSubmit();
+          }} 
+          disabled={loading}
+        >
           Send
         </button>
       </div>
