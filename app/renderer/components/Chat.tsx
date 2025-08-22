@@ -21,6 +21,7 @@ export default function Chat() {
   const [promptStyle, setPromptStyle] = useState<"Balanced" | "Brief" | "Creative" | "Professional">(
     "Balanced"
   );
+  const [isMinimized, setIsMinimized] = useState(false);
   const [copiedNotice, setCopiedNotice] = useState(false);
 
   // (optional) sessionId if you want multi-chat later
@@ -42,6 +43,11 @@ export default function Chat() {
     if (savedStyle === "Balanced" || savedStyle === "Brief" || savedStyle === "Creative" || savedStyle === "Professional") {
       setPromptStyle(savedStyle);
     }
+
+    const savedMinimized = localStorage.getItem("clippy.isMinimized.v1");
+    if (savedMinimized === "true") {
+      setIsMinimized(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -56,9 +62,18 @@ export default function Chat() {
     localStorage.setItem("clippy.promptStyle.v1", promptStyle);
   }, [promptStyle]);
 
+  useEffect(() => {
+    // Save minimized state whenever it changes
+    localStorage.setItem("clippy.isMinimized.v1", isMinimized.toString());
+  }, [isMinimized]);
+
   // --- Handlers ---
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setInputText(e.target.value);
+  }
+
+  function toggleMinimized() {
+    setIsMinimized(!isMinimized);
   }
 
   async function handleSubmit() {
@@ -126,6 +141,17 @@ export default function Chat() {
   }
 
   // --- UI ---
+  // If minimized, show compact widget
+  if (isMinimized) {
+    return (
+      <div className="chat-widget-compact" onClick={toggleMinimized}>
+        <div className="widget-icon">💬</div>
+        <div className="widget-text">Clippy AI</div>
+      </div>
+    );
+  }
+
+  // Full chat window
   return (
     <div className="chat-window">
       {/* Header */}
@@ -143,6 +169,7 @@ export default function Chat() {
           <option value="Professional">Professional</option>
         </select>
         <button onClick={() => setMessages([])}>Clear</button>
+        <button onClick={toggleMinimized}>−</button>
         <button onClick={async () => {
           const helpMessage: ChatMessage = {
             id: Date.now().toString(),
